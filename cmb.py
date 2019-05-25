@@ -30,12 +30,10 @@ def readHeaders(ws, startRow):
 	"""
 	[Worksheet] ws, [Int] startRow => [List] headers
 	"""
-	firstLine = lambda s: s.split('\n')[0].strip()
-	return list(map(firstLine
-			       , takewhile(lambda x: x != ''
-						  	  , map(stripIfString
-						  	   	   , map(partial(cellValue, ws, startRow)
-						  	   	    	, range(ws.ncols))))))
+	firstLine = lambda s: s.split('\n')[0].strip() if isinstance(s, str) else s
+	return list(takewhile(lambda x: x != ''
+						 , map(firstLine
+						  	  , rowToList(ws, startRow))))
 
 
 
@@ -67,26 +65,33 @@ def isHolding(lineItems):
 
 
 
-def worksheetToLines(ws, startRow=0, numItems=None):
+def worksheetToLines(ws, startRow=0, numColumns=None):
 	"""
-	[Worksheet] ws, [Int] startRow, [Int] numItems => [Iterable] a list of lines
+	[Worksheet] ws, [Int] startRow, [Int] numColumns => [Iterable] a list of lines
 	Where,
 
 	ws: worksheet
 	startRow: the starting line to read from
-	numItems: number of columns to read each line
+	numColumns: number of columns to read each line
 
 	Each time the generator yields a line, which is a list of values from column 0
 	up to the number of columns to read
 	"""
 	row = startRow
-	if numItems == None:
-		numItems = ws.ncols
-
 	while (row < ws.nrows):
-		yield list(map(partial(cellValue, ws, row), range(numItems)))
+		yield rowToList(ws, row, numColumns)
 		row = row + 1
 
+
+
+def rowToList(ws, row, numColumns=None):
+	"""
+
+	"""
+	if numColumns == None:
+		numColumns = ws.ncols
+
+	return list(map(partial(cellValue, ws, row), range(numColumns)))
 
 
 
