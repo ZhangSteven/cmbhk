@@ -4,6 +4,7 @@ from xlrd import open_workbook
 from functools import partial
 from itertools import takewhile, chain
 from cmbhk.utility import getCurrentDirectory, getStartRow, getCustodian
+from utils.excel import worksheetToLines, rowToList
 import logging
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,8 @@ def readHolding(ws, startRow):
 	return map(partial(position, headers)
 			  , takewhile(isHolding
 						 , worksheetToLines(ws
-								  			, getStartRow()+1
-								  			, len(headers))))
+								  		   , getStartRow()+1
+								  		   , len(headers))))
 
 
 
@@ -30,10 +31,12 @@ def readHeaders(ws, startRow):
 	"""
 	[Worksheet] ws, [Int] startRow => [List] headers
 	"""
-	firstLine = lambda s: s.split('\n')[0].strip() if isinstance(s, str) else s
+	toString = lambda s: str(s)
+	firstLine = lambda s: s.split('\n')[0].strip()
 	return list(takewhile(lambda x: x != ''
 						 , map(firstLine
-						  	  , rowToList(ws, startRow))))
+						  	  , map(toString
+						  	  	   , rowToList(ws, startRow)))))
 
 
 
@@ -42,11 +45,6 @@ def stripIfString(x):
 		return x.strip()
 	else:
 		return x
-
-
-
-def cellValue(ws, row, column):
-	return ws.cell_value(row, column)
 
 
 
@@ -63,35 +61,6 @@ def isHolding(lineItems):
 	except IndexError:
 		return False
 
-
-
-def worksheetToLines(ws, startRow=0, numColumns=None):
-	"""
-	[Worksheet] ws, [Int] startRow, [Int] numColumns => [Iterable] a list of lines
-	Where,
-
-	ws: worksheet
-	startRow: the starting line to read from
-	numColumns: number of columns to read each line
-
-	Each time the generator yields a line, which is a list of values from column 0
-	up to the number of columns to read
-	"""
-	row = startRow
-	while (row < ws.nrows):
-		yield rowToList(ws, row, numColumns)
-		row = row + 1
-
-
-
-def rowToList(ws, row, numColumns=None):
-	"""
-
-	"""
-	if numColumns == None:
-		numColumns = ws.ncols
-
-	return list(map(partial(cellValue, ws, row), range(numColumns)))
 
 
 
