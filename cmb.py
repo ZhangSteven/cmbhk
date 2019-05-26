@@ -33,7 +33,9 @@ def readHeaders(ws, startRow):
 	"""
 	toString = lambda s: str(s)
 	firstLine = lambda s: s.split('\n')[0].strip()
-	return list(takewhile(lambda x: x != ''
+	nonEmptyString = lambda s: s != ''
+
+	return list(takewhile(nonEmptyString
 						 , map(firstLine
 						  	  , map(toString
 						  	  	   , rowToList(ws, startRow)))))
@@ -60,7 +62,6 @@ def isHolding(lineItems):
 
 	except IndexError:
 		return False
-
 
 
 
