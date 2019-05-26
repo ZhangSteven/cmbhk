@@ -6,6 +6,7 @@ from itertools import takewhile, dropwhile, chain
 from cmbhk.utility import getCurrentDirectory, getStartRow, getCustodian
 from utils.excel import worksheetToLines, rowToList
 from utils.iter import head, firstOf
+from utils.utility import dictToValues, writeCsv
 import logging
 logger = logging.getLogger(__name__)
 
@@ -52,13 +53,13 @@ def readCash(ws, startRow):
 	hasClosingBalance = lambda L: True if any(isClosingBalance(x) for x in L) else False
 	lineItems = firstOf(hasClosingBalance, worksheetToLines(ws, getStartRow()+1))
 	if lineItems == None:
-		raise ValueError('readCash(): cash line is None')
+		raise ValueError('readCash(): no closing balance found')
 
 	isFloat = lambda x: True if isinstance(x, float) else False
 	amount = firstOf(isFloat, lineItems)
 	currencyString = firstOf(isClosingBalance, lineItems)
 	if amount == None or currencyString == None:
-		raise ValueError('{0}, {1}'.format(currencyString, amount))
+		raise ValueError('readCash(): {0}, {1}'.format(currencyString, amount))
 
 	return (currencyString.strip()[-4:-1], amount)
 
@@ -114,22 +115,68 @@ def genevaPosition(portId, date, position):
 
 
 
+def getOutputFileName(inputFile, outputDir, prefix):
+	"""
+	[String] inputFile, [String] outputDir, [String] prefix =>
+		[String] output file name (with path)
+	"""
+	return join(outputDir, prefix + getDateFromFilename(inputFile) + '.csv')
+
+
+
+def getDateFromFilename(inputFile):
+	"""
+	[String] inputFile => [String] date (yyyy-mm-dd)
+
+	inputFile filename looks like (after stripping path):
+
+	<path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
+	"""
+	dateString = inputFile.split('\\')[-1].split('.')[0].split('_')[1]
+	return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
+
+
+
+def toCsv(portId, inputFile, outputDir, prefix):
+	"""
+	[String] portId, [String] intputFile, [String] outputDir, [String] prefix
+		=> [String] outputFile name (including path)
+
+	Side effect: create an output csv file
+
+	This function is to be called by the recon_helper.py from reconciliation_helper
+	package.
+	"""
+	gPositions = map(partial(genevaPosition, portId, getDateFromFilename(inputFile))
+                            , readHolding(open_workbook(inputFile).sheet_by_index(0)
+                             			 , getStartRow()))
+	headers = ['portfolio', 'custodian', 'date', 'geneva_investment_id',
+				'ISIN', 'bloomberg_figi', 'name', 'currency', 'quantity']
+	rows = map(partial(dictToValues, headers), gPositions)
+	outputFile = getOutputFileName(inputFile, outputDir, prefix)
+	writeCsv(outputFile, chain([headers], rows), '|')
+	return outputFile
+
+
+
 if __name__ == '__main__':
 	import logging.config
 	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 
 	from os.path import join
 	inputFile = join(getCurrentDirectory(), 'samples', 'holding _ 16032017.xlsx')
-	wb = open_workbook(inputFile)
-	ws = wb.sheet_by_index(0)
+	# wb = open_workbook(inputFile)
+	# ws = wb.sheet_by_index(0)
 
-	gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
-					, readHolding(ws, getStartRow()))
-	for x in gPositions:
-		print(x)
+	# gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
+	# 				, readHolding(ws, getStartRow()))
+	# for x in gPositions:
+	# 	print(x)
 
 
-	inputFile = join(getCurrentDirectory(), 'samples', 'cash _ 16032017.xlsx')
-	wb = open_workbook(inputFile)
-	ws = wb.sheet_by_index(0)
-	print(readCash(ws, getStartRow()))
+	# inputFile = join(getCurrentDirectory(), 'samples', 'cash _ 16032017.xlsx')
+	# wb = open_workbook(inputFile)
+	# ws = wb.sheet_by_index(0)
+	# print(readCash(ws, getStartRow()))
+
+	toCsv('40017', inputFile, getCurrentDirectory(), 'global_fixed_income_spc_')
