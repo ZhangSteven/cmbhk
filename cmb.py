@@ -3,6 +3,7 @@
 from xlrd import open_workbook
 from functools import partial
 from itertools import takewhile, dropwhile, chain
+from os.path import join
 from cmbhk.utility import getCurrentDirectory, getStartRow, getCustodian
 from utils.excel import worksheetToLines, rowToList
 from utils.iter import head, firstOf
@@ -92,9 +93,9 @@ def genevaPosition(portId, date, position):
 	"""
 	[String] portId, [String] date, [Dictionary] position => 
 		[Dictionary] gPosition
-
-	A Geneva position is a dictionary object that has the following list
-	of keys:
+	
+	A Geneva position is a dictionary object that has the following
+	keys:
 
 	portfolio|custodian|date|geneva_investment_id|ISIN|bloomberg_figi|name
 	|currency|quantity
@@ -115,6 +116,39 @@ def genevaPosition(portId, date, position):
 
 
 
+def genevaCash(portId, date, cash):
+	"""
+	[String] portId, [String] date, [Tuple] cash => 
+		[Dictionary] gCash
+
+	cash: a tuple like ('HKD', 1234.56)
+
+	A Geneva cash position is a dictionary object that has the following
+	keys:
+
+	portfolio|custodian|date|currency|balance
+	
+	"""
+	genevaCash = {}
+	genevaCash['portfolio'] = portId
+	genevaCash['custodian'] = getCustodian()
+	genevaCash['date'] = date
+	(genevaCash['currency'], genevaCash['balance']) = cash
+	
+	return genevaCash
+
+
+
+def fileNameFromPath(inputFile):
+	"""
+	[String] inputFile => [String] the file name after stripping the path
+
+	Assuming the path is Windows style, i.e., C:\Temp\File.txt
+	"""
+	return inputFile.split('\\')[-1]
+
+
+
 def getOutputFileName(inputFile, outputDir, prefix):
 	"""
 	[String] inputFile, [String] outputDir, [String] prefix =>
@@ -132,7 +166,7 @@ def getDateFromFilename(inputFile):
 
 	<path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
 	"""
-	dateString = inputFile.split('\\')[-1].split('.')[0].split('_')[1]
+	dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
 	return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
 
 
@@ -147,11 +181,24 @@ def toCsv(portId, inputFile, outputDir, prefix):
 	This function is to be called by the recon_helper.py from reconciliation_helper
 	package.
 	"""
-	gPositions = map(partial(genevaPosition, portId, getDateFromFilename(inputFile))
-                            , readHolding(open_workbook(inputFile).sheet_by_index(0)
-                             			 , getStartRow()))
-	headers = ['portfolio', 'custodian', 'date', 'geneva_investment_id',
-				'ISIN', 'bloomberg_figi', 'name', 'currency', 'quantity']
+	isHoldingFile = lambda f: fileNameFromPath(inputFile).split('.')[0].lower().startswith('holding')
+	
+	if isHoldingFile(inputFile):
+		gPositions = map(partial(genevaPosition, portId, getDateFromFilename(inputFile))
+	                            , readHolding(open_workbook(inputFile).sheet_by_index(0)
+	                             			 , getStartRow()))
+		headers = ['portfolio', 'custodian', 'date', 'geneva_investment_id',
+					'ISIN', 'bloomberg_figi', 'name', 'currency', 'quantity']
+		prefix = prefix + 'holding_'
+
+	else:	# it's a cash file
+		gPositions = [genevaCash(portId
+								, getDateFromFilename(inputFile)
+	                            , readCash(open_workbook(inputFile).sheet_by_index(0)
+	                             			 , getStartRow()))]
+		headers = ['portfolio', 'custodian', 'date', 'currency', 'balance']
+		prefix = prefix + 'cash_'
+
 	rows = map(partial(dictToValues, headers), gPositions)
 	outputFile = getOutputFileName(inputFile, outputDir, prefix)
 	writeCsv(outputFile, chain([headers], rows), '|')
@@ -163,7 +210,6 @@ if __name__ == '__main__':
 	import logging.config
 	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 
-	from os.path import join
 	inputFile = join(getCurrentDirectory(), 'samples', 'holding _ 16032017.xlsx')
 	# wb = open_workbook(inputFile)
 	# ws = wb.sheet_by_index(0)
@@ -179,4 +225,4 @@ if __name__ == '__main__':
 	# ws = wb.sheet_by_index(0)
 	# print(readCash(ws, getStartRow()))
 
-	toCsv('40017', inputFile, getCurrentDirectory(), 'global_fixed_income_spc_')
+	toCsv('40017', inputFile, getCurrentDirectory(), 'global_spc_')
