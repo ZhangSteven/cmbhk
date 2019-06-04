@@ -2,7 +2,7 @@
 # 
 from xlrd import open_workbook
 from functools import partial
-from itertools import takewhile, dropwhile, chain, islice
+from itertools import takewhile, dropwhile, chain
 from os.path import join
 from cmbhk.utility import getCurrentDirectory, getStartRow, getCustodian
 from utils.excel import worksheetToLines, rowToList
@@ -31,17 +31,17 @@ def readHolding(ws, startRow):
 
 
 def readHeaders(ws, startRow):
-    """
-    [Worksheet] ws, [Int] startRow => [List] headers
-    """
-    toString = lambda s: str(s)
-    firstLine = lambda s: s.split('\n')[0].strip()
-    nonEmptyString = lambda s: s != ''
+	"""
+	[Worksheet] ws, [Int] startRow => [List] headers
+	"""
+	toString = lambda s: str(s)
+	firstLine = lambda s: s.split('\n')[0].strip()
+	nonEmptyString = lambda s: s != ''
 
-    return list(filter(nonEmptyString
-                      , map(firstLine
-                           , map(toString
-                                , rowToList(ws, startRow)))))
+	return list(takewhile(nonEmptyString
+						 , map(firstLine
+						  	  , map(toString
+						  	  	   , rowToList(ws, startRow)))))
 
 
 
@@ -159,18 +159,18 @@ def getOutputFileName(inputFile, outputDir, prefix):
 
 
 def getDateFromFilename(inputFile):
-    """
-    [String] inputFile => [String] date (yyyy-mm-dd)
+	"""
+	[String] inputFile => [String] date (yyyy-mm-dd)
 
-    inputFile filename looks like (after stripping path):
+	inputFile filename looks like (after stripping path):
 
-    <path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
+	<path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
 
     SecurityHoldingPosition-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS
     DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS
-    """
-    # dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
-    # return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
+	"""
+	# dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
+	# return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
     dateString = fileNameFromPath(inputFile).split('.')[0].split('-')[2]
     return dateString[0:4] + '-' + dateString[4:6] + '-' + dateString[6:8]
 
@@ -212,19 +212,12 @@ def toCsv(portId, inputFile, outputDir, prefix):
 
 
 if __name__ == '__main__':
-    import logging.config
-    logging.config.fileConfig('logging.config', disable_existing_loggers=False)
+	import logging.config
+	logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 
-    inputFile = join(getCurrentDirectory()
-                    , 'samples'
-                    # , 'SecurityHoldingPosition-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
-                    , 'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
-
-    wb = open_workbook(inputFile)
-    ws = wb.sheet_by_index(0)
-
-    # print(readHeaders(ws, 6, 13))   # print holdings headers
-    print(readHeaders(ws, 14, 13))   # print cash headers
+	inputFile = join(getCurrentDirectory(), 'samples', 'holding _ 16032017.xlsx')
+	# wb = open_workbook(inputFile)
+	# ws = wb.sheet_by_index(0)
 
 	# gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
 	# 				, readHolding(ws, getStartRow()))
@@ -237,4 +230,4 @@ if __name__ == '__main__':
 	# ws = wb.sheet_by_index(0)
 	# print(readCash(ws, getStartRow()))
 
-	# toCsv('40017', inputFile, getCurrentDirectory(), 'global_spc_')
+	toCsv('40017', inputFile, getCurrentDirectory(), 'global_spc_')
