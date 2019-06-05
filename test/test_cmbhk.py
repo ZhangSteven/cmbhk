@@ -17,15 +17,15 @@ class TestCMBHK(unittest2.TestCase):
 
 
 
-    # def testReadHolding(self):
-    #     inputFile = join(getCurrentDirectory(), 'samples', \
-    #                     'holding _ 16032017.xlsx')
-    #     wb = open_workbook(inputFile)
-    #     ws = wb.sheet_by_index(0)
-    #     holding = list(readHolding(ws, getStartRow()))
-    #     self.assertEqual(11, len(holding))
-    #     self.verifyHolding1(holding[0])
-    #     self.verifyHolding2(holding[10])
+    def testReadHolding(self):
+        inputFile = join(getCurrentDirectory(), 'samples', \
+                        'SecurityHoldingPosition-client name-20190531.XLS')
+        wb = open_workbook(inputFile)
+        ws = wb.sheet_by_index(0)
+        holding = list(readHolding(ws, getStartRow()))
+        self.assertEqual(2, len(holding))
+        self.verifyHolding1(holding[0])
+        self.verifyHolding2(holding[1])
 
 
 
@@ -41,34 +41,34 @@ class TestCMBHK(unittest2.TestCase):
 
 
 
-    def testReadCash(self):
-        inputFile = join(getCurrentDirectory(), 'samples', \
-                        'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
-        wb = open_workbook(inputFile)
-        ws = wb.sheet_by_index(0)
-        (currency, amount) = readCash(ws, getStartRow())
-        self.assertEqual(currency, 'CNY')
-        self.assertAlmostEqual(amount,  0.00)
+    # def testReadCash(self):
+    #     inputFile = join(getCurrentDirectory(), 'samples', \
+    #                     'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
+    #     wb = open_workbook(inputFile)
+    #     ws = wb.sheet_by_index(0)
+    #     (currency, amount) = readCash(ws, getStartRow())
+    #     self.assertEqual(currency, 'CNY')
+    #     self.assertAlmostEqual(amount,  0.00)
 
 
 
-    # def verifyHolding1(self, holding):
-    #     self.assertEqual(10, len(holding))
-    #     self.assertAlmostEqual(49.75, holding['Indicative Price'])
-    #     self.assertEqual('HKD', holding['Ccy'])
-    #     self.assertEqual(3000000, holding['Settled Quantity'])
-    #     self.assertEqual('HK0000069689', holding['Securities Identifier'])
-    #     self.assertEqual('USD', holding['Base Ccy'])
+    def verifyHolding1(self, holding):
+        self.assertEqual(10, len(holding))
+        self.assertAlmostEqual(103.497, holding['Indicative Price'])
+        self.assertEqual('USD', holding['Ccy'])
+        self.assertEqual(200000, holding['Settled Quantity (Available Balance)'])
+        self.assertEqual('CH1234567890', holding['Securities Identifier'])
+        self.assertEqual('USD', holding['Base Ccy'])
 
 
 
-    # def verifyHolding2(self, holding):
-    #     self.assertEqual(10, len(holding))
-    #     self.assertAlmostEqual(100.17, holding['Indicative Price'])
-    #     self.assertEqual('USD', holding['Ccy'])
-    #     self.assertEqual(200000000, holding['Traded Quantity'])
-    #     self.assertEqual('US9128282988', holding['Securities Identifier'])
-    #     self.assertEqual('US TREASURY N/B 2.25% 02/15/2027', holding['Securities Name'])
+    def verifyHolding2(self, holding):
+        self.assertEqual(10, len(holding))
+        self.assertAlmostEqual(88.765, holding['Indicative Price'])
+        self.assertEqual('USD', holding['Ccy'])
+        self.assertEqual(200000, holding['Traded Quantity (Ledger Balance)'])
+        self.assertEqual('XS1234567980', holding['Securities Identifier'])
+        self.assertEqual('DFG', holding['Securities Name'])
 
 
 

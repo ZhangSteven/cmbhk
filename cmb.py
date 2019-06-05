@@ -2,7 +2,7 @@
 # 
 from xlrd import open_workbook
 from functools import partial
-from itertools import takewhile, dropwhile, chain, islice
+from itertools import takewhile, dropwhile, chain, filterfalse
 from os.path import join
 from cmbhk.utility import getCurrentDirectory, getStartRow, getCustodian
 from utils.excel import worksheetToLines, rowToList
@@ -22,11 +22,12 @@ def readHolding(ws, startRow):
 	"""
 	headers = readHeaders(ws, startRow)
 	position = lambda headers, values: dict(zip(headers, values))
+	emptyString = lambda s: s == ''
+
 	return map(partial(position, headers)
-			  , takewhile(firstCellNotEmpty
-						 , worksheetToLines(ws
-								  		   , getStartRow()+1
-								  		   , len(headers))))
+			  , map(partial(filterfalse, emptyString)
+			  	   , takewhile(firstCellNotEmpty
+						 	  , worksheetToLines(ws, getStartRow()+2))))
 
 
 
@@ -111,7 +112,7 @@ def genevaPosition(portId, date, position):
 	genevaPos['date'] = date
 	genevaPos['name'] = position['Securities Name']
 	genevaPos['currency'] = position['Ccy']
-	genevaPos['quantity'] = position['Traded Quantity']
+	genevaPos['quantity'] = position['Traded Quantity (Ledger Balance)']
 	genevaPos['geneva_investment_id'] = ''
 	genevaPos['ISIN'] = position['Securities Identifier']
 	genevaPos['bloomberg_figi'] = ''
@@ -217,16 +218,18 @@ if __name__ == '__main__':
 
     inputFile = join(getCurrentDirectory()
                     , 'samples'
-                    # , 'SecurityHoldingPosition-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
-                    , 'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
+                    , 'SecurityHoldingPosition-client name-20190531.XLS')
+                    # , 'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
 
     wb = open_workbook(inputFile)
     ws = wb.sheet_by_index(0)
-
-    # print(readHeaders(ws, 6))   # print holdings headers
-    print(readHeaders(ws, 14))   # print cash headers
-    print(readCash(ws, 14))
-    print(getDateFromFilename(inputFile))
+    print(readHeaders(ws, getStartRow()))   # print holdings headers
+    for x in readHolding(ws, getStartRow()):
+    	print(x)
+    
+    # print(readHeaders(ws, 14))   # print cash headers
+    # print(readCash(ws, 14))
+    # print(getDateFromFilename(inputFile))
 
 	# gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
 	# 				, readHolding(ws, getStartRow()))
