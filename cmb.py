@@ -57,12 +57,16 @@ def readCash(ws, startRow):
 		raise ValueError('readCash(): no closing balance found')
 
 	isFloat = lambda x: True if isinstance(x, float) else False
+	isCurrencyString = lambda x: True if isinstance(x, str) \
+										and len(x) > 6 and x[0] == '(' \
+										and x[6] == ')' \
+										else False
 	amount = firstOf(isFloat, lineItems)
-	currencyString = firstOf(isClosingBalance, lineItems)
+	currencyString = firstOf(isCurrencyString, lineItems)
 	if amount == None or currencyString == None:
 		raise ValueError('readCash(): {0}, {1}'.format(currencyString, amount))
 
-	return (currencyString.strip()[-4:-1], amount)
+	return (currencyString.strip()[2:5], amount)
 
 	
 
@@ -164,10 +168,8 @@ def getDateFromFilename(inputFile):
 
     inputFile filename looks like (after stripping path):
 
-    <path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
-
-    SecurityHoldingPosition-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS
-    DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS
+    SecurityHoldingPosition-CMFHK XXX SP-20190531.XLS
+    DailyCashHolding-CMFHK XXX SP-20190531.XLS
     """
     # dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
     # return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
@@ -223,8 +225,9 @@ if __name__ == '__main__':
     wb = open_workbook(inputFile)
     ws = wb.sheet_by_index(0)
 
-    # print(readHeaders(ws, 6, 13))   # print holdings headers
-    print(readHeaders(ws, 14, 13))   # print cash headers
+    # print(readHeaders(ws, 6))   # print holdings headers
+    print(readHeaders(ws, 14))   # print cash headers
+    print(readCash(ws, 14))
 
 	# gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
 	# 				, readHolding(ws, getStartRow()))
