@@ -171,8 +171,6 @@ def getDateFromFilename(inputFile):
     SecurityHoldingPosition-CMFHK XXX SP-20190531.XLS
     DailyCashHolding-CMFHK XXX SP-20190531.XLS
     """
-    # dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
-    # return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
     dateString = fileNameFromPath(inputFile).split('.')[0].split('-')[2]
     return dateString[0:4] + '-' + dateString[4:6] + '-' + dateString[6:8]
 
@@ -228,6 +226,7 @@ if __name__ == '__main__':
     # print(readHeaders(ws, 6))   # print holdings headers
     print(readHeaders(ws, 14))   # print cash headers
     print(readCash(ws, 14))
+    print(getDateFromFilename(inputFile))
 
 	# gPositions = map(partial(genevaPosition, '40017', '2017-03-16') 
 	# 				, readHolding(ws, getStartRow()))
