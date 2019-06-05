@@ -29,26 +29,27 @@ class TestCMBHK(unittest2.TestCase):
 
 
 
-    # def testGenevaPosition(self):
-    #     inputFile = join(getCurrentDirectory(), 'samples', \
-    #                     'holding _ 16032017.xlsx')
-    #     wb = open_workbook(inputFile)
-    #     ws = wb.sheet_by_index(0)
-    #     gPositions = list(map(partial(genevaPosition, '40017', '2017-03-16') 
-    #                          , readHolding(ws, getStartRow())))
-    #     self.assertEqual(11, len(gPositions))
-    #     self.verifyGenevaHolding1(gPositions[0])
+    def testGenevaPosition(self):
+        inputFile = join(getCurrentDirectory(), 'samples', \
+                        'SecurityHoldingPosition-client name-20190531.XLS')
+        wb = open_workbook(inputFile)
+        ws = wb.sheet_by_index(0)
+        gPositions = list(map(partial(genevaPosition, '40017', '2017-05-31') 
+                             , readHolding(ws, getStartRow())))
+        self.assertEqual(2, len(gPositions))
+        self.verifyGenevaHolding1(gPositions[0])
 
 
 
-    # def testReadCash(self):
-    #     inputFile = join(getCurrentDirectory(), 'samples', \
-    #                     'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
-    #     wb = open_workbook(inputFile)
-    #     ws = wb.sheet_by_index(0)
-    #     (currency, amount) = readCash(ws, getStartRow())
-    #     self.assertEqual(currency, 'CNY')
-    #     self.assertAlmostEqual(amount,  0.00)
+    def testReadCash(self):
+        inputFile = join(getCurrentDirectory(), 'samples', \
+                        'DailyCashHolding-client name-20190531.XLS')
+        wb = open_workbook(inputFile)
+        ws = wb.sheet_by_index(0)
+        cash = dict(readCash(ws))
+        self.assertEqual(len(cash), 2)
+        self.assertEqual(cash['HKD'], 0)
+        self.assertAlmostEqual(cash['USD'], 5338350.56)
 
 
 
@@ -72,12 +73,12 @@ class TestCMBHK(unittest2.TestCase):
 
 
 
-    # def verifyGenevaHolding1(self, position):
-    #     self.assertEqual(9, len(position))
-    #     self.assertEqual('40017', position['portfolio'])
-    #     self.assertEqual('CMBHK', position['custodian'])
-    #     self.assertEqual('2017-03-16', position['date'])
-    #     self.assertEqual('HKD', position['currency'])
-    #     self.assertEqual(3000000, position['quantity'])
-    #     self.assertEqual('AIA GROUP LTD', position['name'])
-    #     self.assertEqual('HK0000069689', position['ISIN'])
+    def verifyGenevaHolding1(self, position):
+        self.assertEqual(9, len(position))
+        self.assertEqual('40017', position['portfolio'])
+        self.assertEqual('CMBHK', position['custodian'])
+        self.assertEqual('2017-05-31', position['date'])
+        self.assertEqual('USD', position['currency'])
+        self.assertEqual(300000, position['quantity'])
+        self.assertEqual('ABC', position['name'])
+        self.assertEqual('CH1234567890', position['ISIN'])

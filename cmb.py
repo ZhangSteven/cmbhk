@@ -46,36 +46,35 @@ def readHeaders(ws, startRow):
 
 
 
-def readCash(ws, startRow):
+def readCash(ws):
 	"""
-	[Worksheet] ws, [Int] startRow => [Tuple] (currency, amount)
+	[Worksheet] ws => [List] list of (currency, amount)
 
-	Return tuple like ('HKD', 12345.67)
+	Return looks like [('HKD', 1234.67), ('USD', 89.88)]
 	"""
-	hasClosingBalance = lambda L: True if any(isClosingBalance(x) for x in L) else False
-	lineItems = firstOf(hasClosingBalance, worksheetToLines(ws, getStartRow()+1))
-	if lineItems == None:
-		raise ValueError('readCash(): no closing balance found')
+	isClosingBalance = lambda s: True if isinstance(s, str) and s.startswith('Closing Balance') \
+									else False
+	isCashLine = lambda L: True if any(isClosingBalance(x) for x in L) else False
 
-	isFloat = lambda x: True if isinstance(x, float) else False
-	isCurrencyString = lambda x: True if isinstance(x, str) \
-										and len(x) > 6 and x[0] == '(' \
-										and x[6] == ')' \
-										else False
-	amount = firstOf(isFloat, lineItems)
-	currencyString = firstOf(isCurrencyString, lineItems)
-	if amount == None or currencyString == None:
-		raise ValueError('readCash(): {0}, {1}'.format(currencyString, amount))
 
-	return (currencyString.strip()[2:5], amount)
+	def cashEntry(lineItems):
+		"""
+		[List] lineItems => [Tuple] (currency, amount)
+		"""
+		isFloat = lambda x: True if isinstance(x, float) else False
+		isCurrencyString = lambda x: True if isinstance(x, str) \
+											and len(x) > 6 and x[0] == '(' \
+											and x[6] == ')' \
+											else False
+		amount = firstOf(isFloat, lineItems)
+		currencyString = firstOf(isCurrencyString, lineItems)
+		if amount == None or currencyString == None:
+			raise ValueError('cashEntry(): cannot parse cash entry: {0}'.format(lineItems))
 
-	
+		return (currencyString.strip()[2:5], amount)
 
-def isClosingBalance(s):
-	if isinstance(s, str) and s.startswith('Closing Balance'):
-		return True
-	else:
-		return False
+
+	return map(cashEntry, filter(isCashLine, worksheetToLines(ws)))
 
 
 
@@ -218,14 +217,17 @@ if __name__ == '__main__':
 
     inputFile = join(getCurrentDirectory()
                     , 'samples'
-                    , 'SecurityHoldingPosition-client name-20190531.XLS')
-                    # , 'DailyCashHolding-CMFHK CHINA LIFE FRANKLIN GLOBAL FIXED INCOME OPPORTUNITIES SP-20190531.XLS')
+                    # , 'SecurityHoldingPosition-client name-20190531.XLS')
+                    , 'DailyCashHolding-client name-20190531.XLS')
 
     wb = open_workbook(inputFile)
     ws = wb.sheet_by_index(0)
-    print(readHeaders(ws, getStartRow()))   # print holdings headers
-    for x in readHolding(ws, getStartRow()):
-    	print(x)
+    # print(readHeaders(ws, getStartRow()))   # print holdings headers
+    # for x in readHolding(ws, getStartRow()):
+    # 	print(x)
+
+    for x in readCash(ws):
+        print(x)
     
     # print(readHeaders(ws, 14))   # print cash headers
     # print(readCash(ws, 14))
