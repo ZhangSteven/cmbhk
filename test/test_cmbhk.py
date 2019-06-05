@@ -19,7 +19,7 @@ class TestCMBHK(unittest2.TestCase):
 
     def testReadHolding(self):
         inputFile = join(getCurrentDirectory(), 'samples', \
-                        'SecurityHoldingPosition-client name-20190531.XLS')
+                        'holding _ 31052019.XLS')
         wb = open_workbook(inputFile)
         ws = wb.sheet_by_index(0)
         holding = list(readHolding(ws, getStartRow()))
@@ -31,7 +31,7 @@ class TestCMBHK(unittest2.TestCase):
 
     def testGenevaPosition(self):
         inputFile = join(getCurrentDirectory(), 'samples', \
-                        'SecurityHoldingPosition-client name-20190531.XLS')
+                        'holding _ 31052019.XLS')
         wb = open_workbook(inputFile)
         ws = wb.sheet_by_index(0)
         gPositions = list(map(partial(genevaPosition, '40017', '2017-05-31') 
@@ -43,7 +43,7 @@ class TestCMBHK(unittest2.TestCase):
 
     def testReadCash(self):
         inputFile = join(getCurrentDirectory(), 'samples', \
-                        'DailyCashHolding-client name-20190531.XLS')
+                        'cash _ 31052019.XLS')
         wb = open_workbook(inputFile)
         ws = wb.sheet_by_index(0)
         cash = dict(readCash(ws))
