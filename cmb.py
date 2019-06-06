@@ -163,15 +163,16 @@ def getOutputFileName(inputFile, outputDir, prefix):
 
 
 def getDateFromFilename(inputFile):
-	"""
-	[String] inputFile => [String] date (yyyy-mm-dd)
+    """
+    [String] inputFile => [String] date (yyyy-mm-dd)
 
-	inputFile filename looks like (after stripping path):
+    inputFile filename looks like:
 
-	<path>/holding _ ddmmyyyy.xlsx, or <path>/cash _ ddmmyyyy.xlsx
-	"""
-	dateString = fileNameFromPath(inputFile).split('.')[0].split('_')[1]
-	return dateString[-4:] + '-' + dateString[-6:-4] + '-' + dateString[-8:-6]
+    SecurityHoldingPosition-CMFHK XXX SP-20190531.XLS
+    DailyCashHolding-CMFHK XXX SP-20190531.XLS
+    """
+    dateString = fileNameFromPath(inputFile).split('.')[0].split('-')[2]
+    return dateString[0:4] + '-' + dateString[4:6] + '-' + dateString[6:8]
 
 
 
@@ -214,7 +215,7 @@ def isHoldingFile(filename):
 	[String] filename => [Bool] is this a holding file
 	"""
 	return fileNameFromPath(filename).split('.')[0].\
-			lower().startswith('holding')
+			lower().startswith('securityholdingposition')
 
 
 
@@ -223,7 +224,7 @@ def isCashFile(filename):
 	[String] filename => [Bool] is this a holding file
 	"""
 	return fileNameFromPath(filename).split('.')[0].\
-			lower().startswith('cash')
+			lower().startswith('dailycashholding')
 
 
 
@@ -237,6 +238,6 @@ if __name__ == '__main__':
     logging.config.fileConfig('logging.config', disable_existing_loggers=False)
 
 
-    # inputFile = join(getCurrentDirectory(), 'samples', 'cash _ 31052019.XLS')
-    inputFile = join(getCurrentDirectory(), 'samples', 'holding _ 31052019.XLS')
+    # inputFile = join(getCurrentDirectory(), 'samples', 'DailyCashHolding-client name-20190531.XLS')
+    inputFile = join(getCurrentDirectory(), 'samples', 'SecurityHoldingPosition-client name-20190531.XLS')
     toCsv('40017', inputFile, getCurrentDirectory(), 'global_spc_')
